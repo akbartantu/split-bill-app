@@ -5,6 +5,8 @@
  * Handles various receipt formats including OCR errors.
  */
 
+import { extractCanonicalName } from './extractCanonicalName';
+
 export interface ParsedLineItem {
   quantity: number;
   itemName: string;
