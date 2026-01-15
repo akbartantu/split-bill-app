@@ -167,8 +167,8 @@ export function SummaryStep() {
                   <p className="font-medium text-lg">{summary.participantName}</p>
                   <p className="text-sm text-muted-foreground">
                     {summary.itemBreakdown.length} item{summary.itemBreakdown.length !== 1 ? 's' : ''}
-                    {summary.adjustmentsShare > 0 && (
-                      <> + {formatCurrency(summary.adjustmentsShare, currencyCode, currencyLocale)} extras</>
+                    {summary.adjustmentsShare !== 0 && (
+                      <> {formatCurrency(summary.adjustmentsShare, currencyCode, currencyLocale)} adjustments</>
                     )}
                   </p>
                 </div>

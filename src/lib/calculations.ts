@@ -1,4 +1,4 @@
-import type { Bill, PersonSummary, Transfer, Participant, ReceiptExtraType, ReceiptExtras } from '@/types/bill';
+import type { Bill, PersonSummary, Transfer, Participant } from '@/types/bill';
 import { formatMoneyMinor } from '@/lib/currency';
 
 /**
@@ -25,63 +25,19 @@ export function calculateSubtotal(bill: Bill): number {
   return bill.items.reduce((sum, item) => sum + item.lineTotalMinor, 0);
 }
 
-function getReceiptExtras(bill: Bill, receiptId: string): ReceiptExtras {
-  const defaults: ReceiptExtras = {
-    tax: { mode: 'percentage', value: 0, isInclusive: false },
-    service: { mode: 'percentage', value: 0, isInclusive: false },
-    tip: { mode: 'percentage', value: 0, isInclusive: false },
-  };
-  return bill.receiptExtrasById?.[receiptId] || defaults;
-}
-
 export function calculateReceiptSubtotal(bill: Bill, receiptId: string): number {
   return bill.items
     .filter(item => item.receiptId === receiptId)
     .reduce((sum, item) => sum + item.lineTotalMinor, 0);
 }
 
-export function calculateReceiptExtrasTotal(bill: Bill, receiptId: string): number {
-  const subtotal = calculateReceiptSubtotal(bill, receiptId);
-  const extras = getReceiptExtras(bill, receiptId);
-  const extraTypes: ReceiptExtraType[] = ['tax', 'service', 'tip'];
-
-  let extrasMinor = 0;
-
-  extraTypes.forEach(type => {
-    const extra = extras[type];
-    if (extra.isInclusive) return;
-    if (extra.mode === 'percentage') {
-      extrasMinor += Math.round(subtotal * (extra.value / 100));
-    } else {
-      extrasMinor += Math.round(extra.value);
-    }
-  });
-
-  return extrasMinor;
-}
-
-export function calculateReceiptGrandTotal(bill: Bill, receiptId: string): number {
-  const subtotal = calculateReceiptSubtotal(bill, receiptId);
-  const extras = calculateReceiptExtrasTotal(bill, receiptId);
-  return subtotal + extras;
-}
-
 /**
- * Calculate adjustments total (tax, service, tip minus discounts)
+ * Calculate adjustments total (e.g. discounts)
  */
 export function calculateAdjustmentsTotal(bill: Bill): number {
-  const receipts = bill.receipts || [];
-  if (receipts.length > 0 && bill.receiptExtrasById) {
-    return receipts.reduce((sum, receipt) => {
-      return sum + calculateReceiptExtrasTotal(bill, receipt.id);
-    }, 0);
-  }
-
   const subtotal = calculateSubtotal(bill);
   
   return bill.adjustments.reduce((total, adj) => {
-    if (adj.isInclusive) return total; // Already in prices
-    
     const amount = adj.mode === 'percentage' 
       ? subtotal * (adj.value / 100)
       : adj.value;
@@ -94,10 +50,6 @@ export function calculateAdjustmentsTotal(bill: Bill): number {
  * Calculate the grand total
  */
 export function calculateGrandTotal(bill: Bill): number {
-  const receipts = bill.receipts || [];
-  if (receipts.length > 0 && bill.receiptExtrasById) {
-    return receipts.reduce((sum, receipt) => sum + calculateReceiptGrandTotal(bill, receipt.id), 0);
-  }
   return calculateSubtotal(bill) + calculateAdjustmentsTotal(bill);
 }
 
@@ -231,38 +183,10 @@ export function calculateBillSplit(bill: Bill): PersonSummary[] {
   const subtotal = Array.from(summaries.values())
     .reduce((sum, s) => sum + s.itemsTotal, 0);
 
-  const receipts = bill.receipts || [];
-  const useReceiptExtras = receipts.length > 0 && bill.receiptExtrasById;
-
   // Step 3: Apply adjustments proportionally
-  if (useReceiptExtras) {
-    receipts.forEach(receipt => {
-      const receiptSubtotal = calculateReceiptSubtotal(bill, receipt.id);
-      const receiptExtras = calculateReceiptExtrasTotal(bill, receipt.id);
-      if (receiptExtras === 0) return;
-
-      if (receiptSubtotal <= 0) {
-        const equalSplits = splitCents(receiptExtras, bill.participants.map(() => 1));
-        bill.participants.forEach((p, idx) => {
-          const summary = summaries.get(p.id);
-          if (summary) summary.adjustmentsShare += equalSplits[idx];
-        });
-        return;
-      }
-
-      const weights = bill.participants.map(p => {
-        const receiptTotals = participantReceiptTotals.get(p.id);
-        return receiptTotals?.get(receipt.id) || 0;
-      });
-      const splits = splitCents(receiptExtras, weights);
-      bill.participants.forEach((p, idx) => {
-        const summary = summaries.get(p.id);
-        if (summary) summary.adjustmentsShare += splits[idx];
-      });
-    });
-  } else if (subtotal > 0) {
+  if (subtotal > 0) {
     bill.adjustments.forEach(adj => {
-      if (adj.isInclusive || adj.value === 0) return;
+      if (adj.value === 0) return;
       
       const adjustmentAmount = adj.mode === 'percentage' 
         ? Math.round(subtotal * (adj.value / 100))

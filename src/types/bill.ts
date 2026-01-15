@@ -29,22 +29,11 @@ export interface BillItem {
 
 export interface Adjustment {
   id: string;
-  type: 'tax' | 'service' | 'tip' | 'discount';
+  type: 'discount';
   name: string;
   mode: 'percentage' | 'fixed';
   value: number;
-  isInclusive: boolean;
 }
-
-export type ReceiptExtraType = 'tax' | 'service' | 'tip';
-
-export interface ReceiptExtra {
-  mode: 'percentage' | 'fixed';
-  value: number; // percentage value or minor units when mode=fixed
-  isInclusive: boolean;
-}
-
-export type ReceiptExtras = Record<ReceiptExtraType, ReceiptExtra>;
 
 export type PaymentMethod = 'card' | 'cash' | 'transfer';
 
@@ -84,7 +73,6 @@ export interface Bill {
   adjustments: Adjustment[];
   payments: Payment[];
   receipts?: Receipt[]; // Receipts associated with this bill
-  receiptExtrasById?: Record<string, ReceiptExtras>;
   // Legacy support
   currency?: string;
   currencySymbol?: string;
@@ -142,8 +130,4 @@ export const PARTICIPANT_COLORS = [
   '#6366F1', // Indigo
 ];
 
-export const DEFAULT_ADJUSTMENTS: Partial<Adjustment>[] = [
-  { type: 'tax', name: 'Tax', mode: 'percentage', value: 0, isInclusive: false },
-  { type: 'service', name: 'Service Charge', mode: 'percentage', value: 0, isInclusive: false },
-  { type: 'tip', name: 'Tip', mode: 'percentage', value: 0, isInclusive: false },
-];
+export const DEFAULT_ADJUSTMENTS: Partial<Adjustment>[] = [];

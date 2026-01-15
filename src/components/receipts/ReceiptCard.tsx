@@ -5,9 +5,7 @@ import type { BillItem, Participant, Receipt } from '@/types/bill';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/inputs/MoneyInput';
-import { ReceiptExtrasSection } from '@/components/extras/ReceiptExtrasSection';
 import { ReceiptPayerSection } from '@/components/payments/ReceiptPayerSection';
-import type { ReceiptExtras } from '@/types/bill';
 import { ItemRow } from '@/components/items/ItemRow';
 
 interface ReceiptCardProps {
@@ -16,15 +14,11 @@ interface ReceiptCardProps {
   participants: Participant[];
   currencyCode: string;
   currencyLocale?: string;
-  extras: ReceiptExtras;
   subtotalMinor: number;
-  extrasTotalMinor: number;
-  totalMinor: number;
   onScan: (receiptId: string) => void;
   onDelete: (receiptId: string) => void;
   onUpdateReceipt: (receiptId: string, updates: Partial<Receipt>) => void;
   onAddItem: (receiptId: string, item: { name: string; quantity: number; unitPriceMinor: number }) => void;
-  onUpdateExtra: (receiptId: string, type: import('@/types/bill').ReceiptExtraType, updates: Partial<ReceiptExtras[import('@/types/bill').ReceiptExtraType]>) => void;
   onEditItem: (item: BillItem) => void;
   onRemoveItem: (itemId: string) => void;
   onToggleAssignment: (itemId: string, participantId: string) => void;
@@ -36,15 +30,11 @@ export function ReceiptCard({
   participants,
   currencyCode,
   currencyLocale,
-  extras,
   subtotalMinor,
-  extrasTotalMinor,
-  totalMinor,
   onScan,
   onDelete,
   onUpdateReceipt,
   onAddItem,
-  onUpdateExtra,
   onEditItem,
   onRemoveItem,
   onToggleAssignment,
@@ -155,6 +145,9 @@ export function ReceiptCard({
             <Plus className="w-5 h-5" />
           </Button>
         </div>
+        <p className="text-xs text-muted-foreground">
+          Add tax/service/tip as an item if needed.
+        </p>
       </div>
 
       <AnimatePresence mode="popLayout">
@@ -182,20 +175,10 @@ export function ReceiptCard({
       )}
 
       <div className="pt-2 border-t border-border/50 space-y-4">
-        <ReceiptExtrasSection
-          receiptId={receipt.id}
-          extras={extras}
-          subtotalMinor={subtotalMinor}
-          extrasTotalMinor={extrasTotalMinor}
-          totalMinor={totalMinor}
-          currencyCode={currencyCode}
-          currencyLocale={currencyLocale}
-          onUpdateExtra={onUpdateExtra}
-        />
         <ReceiptPayerSection
           receipt={receipt}
           participants={participants}
-          receiptTotalMinor={totalMinor}
+          receiptTotalMinor={subtotalMinor}
           currencyCode={currencyCode}
           onUpdateReceipt={onUpdateReceipt}
         />

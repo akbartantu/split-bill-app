@@ -1,6 +1,4 @@
 import type { Bill } from '@/types/bill';
-import { calculateReceiptSubtotalCents, calculateReceiptExtrasCents } from '@/selectors/receiptTotals';
-
 function splitCents(total: number, weights: number[]): number[] {
   const weightSum = weights.reduce((sum, w) => sum + w, 0);
   if (weightSum <= 0) {
@@ -41,23 +39,6 @@ export function getFairShareCentsByReceipt(bill: Bill): Record<string, Record<st
       });
     });
 
-    // Receipt extras allocation
-    const receiptSubtotalCents = calculateReceiptSubtotalCents(bill, receiptId);
-    const extrasCents = calculateReceiptExtrasCents(bill, receiptId);
-    if (extrasCents > 0) {
-      if (receiptSubtotalCents <= 0) {
-        const equalSplits = splitCents(extrasCents, participants.map(() => 1));
-        participants.forEach((p, idx) => {
-          receiptMap[p.id] = (receiptMap[p.id] || 0) + equalSplits[idx];
-        });
-      } else {
-        const weights = participants.map(p => receiptMap[p.id] || 0);
-        const splits = splitCents(extrasCents, weights);
-        participants.forEach((p, idx) => {
-          receiptMap[p.id] = (receiptMap[p.id] || 0) + splits[idx];
-        });
-      }
-    }
 
     result[receiptId] = receiptMap;
   });

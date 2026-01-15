@@ -1,5 +1,5 @@
 import type { Bill } from '@/types/bill';
-import { calculateReceiptExtrasTotal, calculateReceiptSubtotal } from '@/lib/calculations';
+import { calculateReceiptSubtotal } from '@/lib/calculations';
 
 export type ReceiptStatusType = 'missing_payer' | 'needs_review' | 'ready' | 'empty';
 
@@ -38,9 +38,7 @@ export function getReceiptStatuses(bill: Bill): ReceiptStatus[] {
       ? bill.participants.find(p => p.id === receipt.payerPersonId)?.name || 'Unknown'
       : null;
 
-    const subtotalMinor = calculateReceiptSubtotal(bill, receipt.id);
-    const extrasMinor = calculateReceiptExtrasTotal(bill, receipt.id);
-    const totalMinor = subtotalMinor + extrasMinor;
+    const totalMinor = calculateReceiptSubtotal(bill, receipt.id);
 
     return {
       receiptId: receipt.id,

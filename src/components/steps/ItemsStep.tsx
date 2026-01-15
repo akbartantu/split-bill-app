@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, ArrowRight, ArrowLeft, Camera, Plus } from 'lucide-react';
 import { EditReceiptItem, type EditableReceiptItem } from '@/components/EditReceiptItem';
 import { Button } from '@/components/ui/button';
-import { calculateReceiptExtrasTotal, calculateReceiptSubtotal, formatCurrency } from '@/lib/calculations';
+import { calculateReceiptSubtotal, formatCurrency } from '@/lib/calculations';
 import { ReceiptScanner } from '@/components/ReceiptScanner';
 import type { ParsedReceipt } from '@/lib/ocr';
 import { ReceiptCard } from '@/components/receipts/ReceiptCard';
@@ -22,10 +22,8 @@ export function ItemsStep() {
     addReceipt,
     updateReceipt,
     removeReceipt,
-    updateReceiptExtra,
     assignItemToParticipant,
     unassignItemFromParticipant,
-    updateAdjustment,
     nextStep, 
     prevStep 
   } = useBillStore();
@@ -132,40 +130,6 @@ export function ItemsStep() {
         receiptId: receiptId, // Assign receipt ID for grouping
       });
     });
-
-    const hasMultipleReceipts = (currentBill.receipts?.length || 0) > 1;
-
-    // Apply tax if detected
-    if (receipt.tax) {
-      if (hasMultipleReceipts) {
-        updateReceiptExtra(receiptId, 'tax', { mode: 'fixed', value: toMinor(receipt.tax, currencyCode), isInclusive: false });
-      } else {
-        const taxAdj = currentBill.adjustments.find(a => a.type === 'tax');
-        if (taxAdj) {
-          updateAdjustment(taxAdj.id, { 
-            mode: 'fixed', 
-            value: toMinor(receipt.tax, currencyCode),
-            isInclusive: false,
-          });
-        }
-      }
-    }
-
-    // Apply service charge if detected
-    if (receipt.serviceCharge) {
-      if (hasMultipleReceipts) {
-        updateReceiptExtra(receiptId, 'service', { mode: 'fixed', value: toMinor(receipt.serviceCharge, currencyCode), isInclusive: false });
-      } else {
-        const serviceAdj = currentBill.adjustments.find(a => a.type === 'service');
-        if (serviceAdj) {
-          updateAdjustment(serviceAdj.id, { 
-            mode: 'fixed', 
-            value: toMinor(receipt.serviceCharge, currencyCode),
-            isInclusive: false,
-          });
-        }
-      }
-    }
   };
 
   const subtotal = currentBill.items.reduce(
@@ -303,10 +267,7 @@ export function ItemsStep() {
                   participants={currentBill.participants}
                   currencyCode={currentBill.currencyCode || currentBill.currency || 'USD'}
                   currencyLocale={currentBill.currencyLocale}
-                  extras={currentBill.receiptExtrasById?.[receipt.id] || { tax: { mode: 'percentage', value: 0, isInclusive: false }, service: { mode: 'percentage', value: 0, isInclusive: false }, tip: { mode: 'percentage', value: 0, isInclusive: false } }}
                   subtotalMinor={calculateReceiptSubtotal(currentBill, receipt.id)}
-                  extrasTotalMinor={calculateReceiptExtrasTotal(currentBill, receipt.id)}
-                  totalMinor={calculateReceiptSubtotal(currentBill, receipt.id) + calculateReceiptExtrasTotal(currentBill, receipt.id)}
                   onScan={(receiptId) => {
                     setScanTargetReceiptId(receiptId);
                     setScannerOpen(true);
@@ -316,7 +277,6 @@ export function ItemsStep() {
                   }}
                   onUpdateReceipt={(receiptId, updates) => updateReceipt(receiptId, updates)}
                   onAddItem={handleAddItemToReceipt}
-                  onUpdateExtra={updateReceiptExtra}
                   onEditItem={(item) => {
                     const editableItem = {
                       id: item.id,

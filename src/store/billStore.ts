@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Bill, BillItem, Participant, Adjustment, Payment, Receipt, ReceiptExtraType, ReceiptExtras, PaymentMethod } from '@/types/bill';
+import type { Bill, BillItem, Participant, Adjustment, Payment, Receipt, PaymentMethod } from '@/types/bill';
 import { PARTICIPANT_COLORS, DEFAULT_ADJUSTMENTS } from '@/types/bill';
 import { toMinor } from '@/lib/money';
 import { getCurrencyConfig } from '@/lib/currency';
@@ -17,15 +17,8 @@ function buildDefaultReceipt(index: number = 1): Receipt {
   };
 }
 
-function buildDefaultReceiptExtras(): ReceiptExtras {
-  return {
-    tax: { mode: 'percentage', value: 0, isInclusive: false },
-    service: { mode: 'percentage', value: 0, isInclusive: false },
-    tip: { mode: 'percentage', value: 0, isInclusive: false },
-  };
-}
-
 function normalizeBillReceipts(bill: Bill): Bill {
+  const { receiptExtrasById, ...billWithoutExtras } = bill as Bill & { receiptExtrasById?: unknown };
   const receipts = bill.receipts && bill.receipts.length > 0 ? bill.receipts : [];
   let normalizedReceipts = receipts.map((receipt, index) => ({
     ...receipt,
@@ -33,7 +26,10 @@ function normalizeBillReceipts(bill: Bill): Bill {
   }));
   let normalizedItems = bill.items;
   let normalizedPayments = bill.payments || [];
-  const extrasById = bill.receiptExtrasById ? { ...bill.receiptExtrasById } : {};
+  const normalizedAdjustments = (bill.adjustments || []).map((adjustment) => {
+    const { isInclusive, ...rest } = adjustment as Adjustment & { isInclusive?: boolean };
+    return rest;
+  });
   const currencyCode = bill.currencyCode || bill.currency || 'USD';
   const currencyConfig = getCurrencyConfig(currencyCode);
 
@@ -46,25 +42,6 @@ function normalizeBillReceipts(bill: Bill): Bill {
       item.receiptId ? item : { ...item, receiptId }
     );
   }
-
-  normalizedReceipts.forEach(receipt => {
-    if (!extrasById[receipt.id]) {
-      extrasById[receipt.id] = buildDefaultReceiptExtras();
-    }
-  });
-
-  Object.keys(extrasById).forEach(receiptId => {
-    const extras = extrasById[receiptId];
-    (['tax', 'service', 'tip'] as const).forEach(type => {
-      const extra = extras[type];
-      if (extra.mode === 'fixed' && !Number.isInteger(extra.value)) {
-        extras[type] = {
-          ...extra,
-          value: toMinor(extra.value, currencyCode),
-        };
-      }
-    });
-  });
 
   normalizedItems = normalizedItems.map(item => {
     const unitPriceMinor = typeof item.unitPriceMinor === 'number'
@@ -95,7 +72,7 @@ function normalizeBillReceipts(bill: Bill): Bill {
   });
 
   return {
-    ...bill,
+    ...billWithoutExtras,
     currencyCode,
     currencyLocale: bill.currencyLocale || currencyConfig.locale,
     currencySymbol: bill.currencySymbol || currencyConfig.symbol,
@@ -103,7 +80,7 @@ function normalizeBillReceipts(bill: Bill): Bill {
     receipts: normalizedReceipts,
     items: normalizedItems,
     payments: normalizedPayments,
-    receiptExtrasById: extrasById,
+    adjustments: normalizedAdjustments,
   };
 }
 
@@ -126,7 +103,6 @@ function createNewBill(): Bill {
     })) as Adjustment[],
     payments: [],
     receipts: [], // Initialize receipts array
-    receiptExtrasById: {},
   };
 }
 
@@ -163,7 +139,6 @@ interface BillState {
   addReceipt: (receipt: Omit<import('@/types/bill').Receipt, 'id'>) => string; // Returns receipt ID
   updateReceipt: (id: string, updates: Partial<import('@/types/bill').Receipt>) => void;
   removeReceipt: (id: string) => void;
-  updateReceiptExtra: (receiptId: string, type: ReceiptExtraType, updates: Partial<ReceiptExtras[ReceiptExtraType]>) => void;
   
   // Adjustment actions
   updateAdjustment: (id: string, updates: Partial<Adjustment>) => void;
@@ -489,10 +464,6 @@ export const useBillStore = create<BillState>()(
               ...(state.currentBill.receipts || []),
               { ...receipt, id: receiptId, receiptName, createdAt: receipt.createdAt || new Date() },
             ],
-            receiptExtrasById: {
-              ...(state.currentBill.receiptExtrasById || {}),
-              [receiptId]: buildDefaultReceiptExtras(),
-            },
           },
         }));
         return receiptId;
@@ -514,13 +485,6 @@ export const useBillStore = create<BillState>()(
           receipts = [buildDefaultReceipt(1)];
         }
         const fallbackReceiptId = receipts[0].id;
-        const extrasById = { ...(state.currentBill.receiptExtrasById || {}) };
-        delete extrasById[id];
-        receipts.forEach(receipt => {
-          if (!extrasById[receipt.id]) {
-            extrasById[receipt.id] = buildDefaultReceiptExtras();
-          }
-        });
         return {
           currentBill: {
             ...state.currentBill,
@@ -531,26 +495,9 @@ export const useBillStore = create<BillState>()(
             payments: state.currentBill.payments.map(payment =>
               payment.receiptId === id ? { ...payment, receiptId: fallbackReceiptId } : payment
             ),
-            receiptExtrasById: extrasById,
           },
         };
       }),
-
-      updateReceiptExtra: (receiptId, type, updates) => set(state => ({
-        currentBill: {
-          ...state.currentBill,
-          receiptExtrasById: {
-            ...(state.currentBill.receiptExtrasById || {}),
-            [receiptId]: {
-              ...(state.currentBill.receiptExtrasById?.[receiptId] || buildDefaultReceiptExtras()),
-              [type]: {
-                ...(state.currentBill.receiptExtrasById?.[receiptId]?.[type] || buildDefaultReceiptExtras()[type]),
-                ...updates,
-              },
-            },
-          },
-        },
-      })),
     }),
     {
       name: 'billsplit-storage',
