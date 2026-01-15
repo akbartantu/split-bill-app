@@ -168,8 +168,11 @@ export function parseReceiptText(
       continue;
     }
 
+    // Normalize line before parsing
+    const normalized = normalizeOcrLine(line);
+
     // Try to parse as item using improved parser
-    const lineItem = parseLineItem(line);
+    const lineItem = parseLineItem(normalized.normalized);
     if (lineItem) {
       // Convert to ParsedItem format
       const parsedItem: ParsedItem = {

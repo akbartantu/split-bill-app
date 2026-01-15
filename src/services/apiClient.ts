@@ -82,8 +82,8 @@ export async function uploadReceiptImage(
     // Stage-based progress simulation
     onProgress?.('uploading', 5);
     
-    // Add timeout to fetch (default 30 seconds)
-    const TIMEOUT_MS = options?.timeoutMs ?? 30000;
+    // Add timeout to fetch (default 60 seconds)
+    const TIMEOUT_MS = options?.timeoutMs ?? 60000;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();

@@ -18,7 +18,7 @@ export interface OCROptions {
   provider?: 'tesseract' | 'google-vision';
 }
 
-const DEFAULT_TIMEOUT = 30000; // 30 seconds
+const DEFAULT_TIMEOUT = 60000; // 60 seconds
 
 /**
  * Run OCR with timeout and error handling

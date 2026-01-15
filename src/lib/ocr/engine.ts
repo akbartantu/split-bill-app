@@ -56,7 +56,7 @@ export async function performMultiPassOCR(
       });
       
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('OCR variant timeout')), 30000); // 30s per variant
+        setTimeout(() => reject(new Error('OCR variant timeout')), 60000); // 60s per variant
       });
       
       const result = await Promise.race([ocrPromise, timeoutPromise]);

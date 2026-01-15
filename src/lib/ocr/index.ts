@@ -54,7 +54,7 @@ export async function scanReceipt(
       // Add timeout for preprocessing
       const preprocessingPromise = preprocessReceiptImage(imageSource);
       const preprocessingTimeout = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Preprocessing timeout')), 30000); // 30 seconds
+        setTimeout(() => reject(new Error('Preprocessing timeout')), 60000); // 60 seconds
       });
       
       variants = await Promise.race([preprocessingPromise, preprocessingTimeout]);

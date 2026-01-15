@@ -166,7 +166,7 @@ async function processReceiptUploadLegacy(
         console.log(`[ReceiptService] [${reqId}] OCR started`);
       }
       ocrResult = await runOCR(preprocessed.buffer, {
-        timeout: 30000, // 30 seconds
+        timeout: 60000, // 60 seconds
       });
       const ocrDuration = Date.now() - ocrStart;
       if (process.env.LOG_LEVEL === 'debug') {

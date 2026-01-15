@@ -128,7 +128,7 @@ export async function scanReceipt(
         console.log(`[ScanReceipt] [${reqId}] Receipt OCR started`);
       }
       ocrResult = await runReceiptOCR(documentDetected.croppedBuffer, {
-        timeout: 30000,
+        timeout: 60000,
       });
       const ocrDuration = Date.now() - ocrStart;
       if (process.env.LOG_LEVEL === 'debug') {

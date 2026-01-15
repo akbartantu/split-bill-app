@@ -18,7 +18,7 @@ export interface ReceiptOCROptions {
   timeout?: number; // milliseconds
 }
 
-const DEFAULT_TIMEOUT = 30000; // 30 seconds
+const DEFAULT_TIMEOUT = 60000; // 60 seconds
 
 /**
  * PSM modes optimized for receipts:

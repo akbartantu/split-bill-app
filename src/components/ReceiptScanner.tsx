@@ -207,8 +207,8 @@ export function ReceiptScanner({ open, onClose, onComplete, targetReceiptId, cur
         setProgressStage('detecting');
         setProgress(5);
         
-        // Client-side OCR with timeout (30 seconds max)
-        const CLIENT_TIMEOUT = 30000;
+        // Client-side OCR with timeout (60 seconds max)
+        const CLIENT_TIMEOUT = 60000;
         const timeoutPromise = new Promise<never>((_, reject) => {
           setTimeout(() => {
             reject(new Error('OCR processing timed out. Please try with a clearer image.'));
@@ -272,7 +272,7 @@ export function ReceiptScanner({ open, onClose, onComplete, targetReceiptId, cur
             },
             {
               signal: abortControllerRef.current?.signal,
-              timeoutMs: 30000,
+              timeoutMs: 60000,
             }
           );
           
@@ -396,7 +396,7 @@ export function ReceiptScanner({ open, onClose, onComplete, targetReceiptId, cur
       } else if (err.message?.includes('API not reachable')) {
         errorMessage = 'API not reachable. Start the server and try again.';
       } else if (err.message?.includes('timeout') || err.message?.includes('timed out')) {
-        errorMessage = 'Scan took too long (30s limit). Try a clearer image or use manual input.';
+        errorMessage = 'Scan took too long (60s limit). Try a clearer image or use manual input.';
       } else if (err.message?.includes('Failed to load image')) {
         errorMessage = 'Failed to load image. The file might be corrupted. Please try a different image.';
       } else if (err.message?.includes('memory')) {

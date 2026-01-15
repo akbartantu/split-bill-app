@@ -87,8 +87,8 @@ router.post('/upload', uploadReceiptImage, async (req: Request, res: Response, n
       }
     }
     
-    // Process receipt with timeout guard (30 seconds max)
-    const MAX_PROCESSING_TIME = 30000;
+    // Process receipt with timeout guard (60 seconds max)
+    const MAX_PROCESSING_TIME = 60000;
     const processingPromise = processReceiptUpload(
       file.buffer,
       file.mimetype,
