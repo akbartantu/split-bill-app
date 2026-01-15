@@ -6,7 +6,6 @@
  */
 
 import { createError } from '../../middleware/errorHandler';
-import type { ParsedReceipt } from '../../../packages/infra-ocr/src/parser';
 
 export interface OCRResult {
   text: string;

@@ -10,7 +10,7 @@
  * 6. Canonical output
  */
 
-import { GoogleSheetsClient } from '../../../../packages/infra-sheets/src/clients/GoogleSheetsClient';
+import { GoogleSheetsClient } from '../../../../../packages/infra-sheets/src/clients/GoogleSheetsClient';
 import { detectAndCropReceipt } from '../preprocess/detectAndCropReceipt';
 import { runReceiptOCR } from '../ocr/runReceiptOcr';
 import { normalizeOcrLine, normalizeOcrLines } from '../parse/normalizeOcrLine';
@@ -35,7 +35,17 @@ export interface ScanReceiptResult {
   success: boolean;
   receipt: {
     id: string;
-    items: CanonicalReceiptItem[];
+    items: Array<{
+      id: string;
+      name: string;
+      quantity: number;
+      unitPrice: number | null;
+      totalPrice: number;
+      confidence: number;
+      needsReview: boolean;
+      reviewReasons: string[];
+      rawText: string;
+    }>;
     confidence: number;
     needsReview: boolean;
   };

@@ -116,11 +116,7 @@ export async function detectAndCropReceipt(
     // Light denoise (preserve text edges)
     // Use median filter with small radius to reduce noise without blurring text
     // Sharp's median is not available, so we use a subtle sharpen instead
-    processed = processed.sharpen({
-      sigma: 0.5,
-      flat: 1,
-      jagged: 2,
-    });
+    processed = processed.sharpen(0.5, 1, 2);
     
     // Step 3: Try document detection (OpenCV placeholder)
     // For now, use smart crop fallback optimized for thermal receipts
@@ -254,6 +250,8 @@ async function smartCropForThermalReceipt(
       strategy: 'center_crop',
       confidence: 0.65, // Medium-high confidence for thermal receipt heuristic
       metadata: {
+        originalWidth: width,
+        originalHeight: height,
         cropArea: {
           x: cropX,
           y: cropY,
@@ -284,6 +282,10 @@ async function smartCropForThermalReceipt(
       height: metadata.height || 0,
       strategy: 'fallback',
       confidence: 0.3,
+      metadata: {
+        originalWidth: width,
+        originalHeight: height,
+      },
     };
   }
 }

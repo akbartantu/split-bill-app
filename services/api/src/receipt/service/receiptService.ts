@@ -5,7 +5,7 @@
  * Handles OCR, parsing, and saving to spreadsheet.
  */
 
-import { GoogleSheetsClient } from '../../../../packages/infra-sheets/src/clients/GoogleSheetsClient';
+import { GoogleSheetsClient } from '../../../../../packages/infra-sheets/src/clients/GoogleSheetsClient';
 import { detectAndCropDocument } from '../preprocess/documentDetectAndCrop';
 import { preprocessImage } from '../preprocess/preprocessImage';
 import { runOCR } from '../ocr/runOcr';

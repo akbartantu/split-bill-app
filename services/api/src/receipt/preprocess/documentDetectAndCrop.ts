@@ -308,6 +308,8 @@ async function smartCropFallback(
       strategy: 'center_crop',
       confidence: 0.6, // Medium-high confidence for center crop heuristic
       metadata: {
+        originalWidth: width,
+        originalHeight: height,
         cropArea: {
           x: cropX,
           y: cropY,
@@ -338,6 +340,10 @@ async function smartCropFallback(
       height: metadata.height || 0,
       strategy: 'fallback',
       confidence: 0.3, // Low confidence for fallback
+      metadata: {
+        originalWidth: width,
+        originalHeight: height,
+      },
     };
   }
 }

@@ -84,7 +84,7 @@ export async function runReceiptOCR(
             tessedit_pageseg_mode: psm,
             // Whitelist characters
             tessedit_char_whitelist: RECEIPT_WHITELIST,
-          }),
+          } as any),
           new Promise<never>((_, reject) => {
             setTimeout(() => {
               reject(createError('OCR timeout', 408, 'OCR_TIMEOUT'));

@@ -147,7 +147,7 @@ router.post('/upload', uploadReceiptImage, async (req: Request, res: Response, n
 router.post('/scan', uploadReceiptImage, async (req: Request, res: Response, next: NextFunction) => {
   // Redirect to upload handler
   req.url = '/upload';
-  router.handle(req, res, next);
+  (router as any).handle(req, res, next);
 });
 
 export { router as receiptRoutes };

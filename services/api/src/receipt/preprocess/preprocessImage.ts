@@ -167,11 +167,14 @@ function preprocessImageBasic(
     );
   }
   
+  // Normalize common alias
+  const normalizedMimetype = mimetype === 'image/jpg' ? 'image/jpeg' : mimetype;
+
   // Validate image format by checking magic bytes
   const isValidImage = 
-    (mimetype === 'image/jpeg' && buffer[0] === 0xFF && buffer[1] === 0xD8) ||
-    (mimetype === 'image/png' && buffer[0] === 0x89 && buffer[1] === 0x50) ||
-    (mimetype === 'image/webp' && buffer[0] === 0x52 && buffer[1] === 0x49);
+    (normalizedMimetype === 'image/jpeg' && buffer[0] === 0xFF && buffer[1] === 0xD8) ||
+    (normalizedMimetype === 'image/png' && buffer[0] === 0x89 && buffer[1] === 0x50) ||
+    (normalizedMimetype === 'image/webp' && buffer[0] === 0x52 && buffer[1] === 0x49);
   
   if (!isValidImage) {
     throw createError('Invalid image format or corrupted file', 400, 'INVALID_IMAGE_FORMAT');
@@ -183,7 +186,7 @@ function preprocessImageBasic(
   let height = 0;
   
   // For JPEG, try to read basic header (simplified)
-  if (mimetype === 'image/jpeg' || mimetype === 'image/jpg') {
+  if (normalizedMimetype === 'image/jpeg') {
     // Basic JPEG header check
     if (buffer[0] === 0xFF && buffer[1] === 0xD8) {
       // Valid JPEG - dimensions would need proper parsing
