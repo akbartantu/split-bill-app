@@ -102,7 +102,7 @@ export function checkReceiptItemSanity(
 
   // Rule 3: Prefer common cents patterns
   const cents = Math.round((item.lineTotal % 1) * 100);
-  const commonCents = [95, 90, 50, 99, 00];
+  const commonCents = [95, 90, 50, 99, 0];
   if (!commonCents.includes(cents)) {
     // Not necessarily wrong, but less common
     // Only flag if other items have common cents
