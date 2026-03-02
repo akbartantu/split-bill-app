@@ -1,7 +1,7 @@
 # BillSplit Pro
 
 ## Overview
-BillSplit Pro helps groups split bills fairly without spreadsheets or manual math. It lets you scan or enter receipts, assign items to people, and see who owes what. It is built for real-world scenarios like multiple receipts, shared items, and different payers. The app keeps the process transparent and produces clear payment instructions.
+Split Bill Calculator helps groups split bills fairly without spreadsheets or manual math. It lets you scan or enter receipts, assign items to people, and see who owes what. It is built for real-world scenarios like multiple receipts, shared items, and different payers. The app keeps the process transparent and produces clear payment instructions.
 
 ## Key Features
 - Multiple receipt support
