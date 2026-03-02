@@ -1,0 +1,61 @@
+name: Deploy to Render (deploy branch)
+
+on:
+  push:
+    branches:
+      - deploy
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: npm
+
+      - name: Install dependencies (root)
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Install API dependencies
+        working-directory: ./services/api
+        run: npm ci
+
+      - name: Build API
+        working-directory: ./services/api
+        run: npm run build
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    env:
+      RENDER_WEB_HOOK_URL: ${{ secrets.RENDER_WEB_HOOK_URL }}
+      RENDER_API_HOOK_URL: ${{ secrets.RENDER_API_HOOK_URL }}
+
+    steps:
+      - name: Trigger Render deploy for web app
+        if: env.RENDER_WEB_HOOK_URL != ''
+        run: |
+          echo "Triggering Render web deploy hook"
+          curl -X POST "$RENDER_WEB_HOOK_URL"
+
+      - name: Trigger Render deploy for API
+        if: env.RENDER_API_HOOK_URL != ''
+        run: |
+          echo "Triggering Render API deploy hook"
+          curl -X POST "$RENDER_API_HOOK_URL"
+
