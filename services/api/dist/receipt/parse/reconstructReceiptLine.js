@@ -11,7 +11,7 @@
  * - UNIT PRICE = first price if qty > 1 and >=2 prices
  * - LINE TOTAL = last price (or single price if qty == 1)
  */
-import { extractCanonicalName } from './extractCanonicalName';
+import { extractCanonicalName } from './extractCanonicalName.js';
 /**
  * Reconstruct a receipt line using column-aware logic
  *

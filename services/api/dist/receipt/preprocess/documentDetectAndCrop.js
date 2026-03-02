@@ -6,7 +6,6 @@
  *
  * Uses OpenCV for edge detection and perspective transformation.
  */
-import { createError } from '../../middleware/errorHandler';
 import sharp from 'sharp';
 /**
  * Maximum dimensions before document detection (resize first for performance)
@@ -17,122 +16,27 @@ const MAX_DETECTION_HEIGHT = 2000;
  * Target width for cropped receipt (standardized for OCR)
  */
 const TARGET_RECEIPT_WIDTH = 1200;
-/**
- * Detect and crop receipt document from image
- *
- * Strategy:
- * 1. Resize if too large (for performance)
- * 2. Try OpenCV-based detection (if available)
- * 3. Fallback to smart crop or center crop
- * 4. Return cropped image ready for preprocessing
- */
 export async function detectAndCropDocument(imageBuffer, mimetype, requestId) {
     const reqId = requestId || `req_${Date.now()}`;
-    const startTime = Date.now();
+    // New behavior: do not crop at all. Always use the original image buffer.
+    // We still log a detection step for observability, but skip any cropping.
     if (process.env.LOG_LEVEL === 'debug') {
-        console.log(`[DocumentDetect] [${reqId}] Starting document detection`);
+        console.log(`[DocumentDetect] [${reqId}] Detection disabled, using original image (no crop)`);
     }
-    try {
-        // Step 1: Load and resize if needed (for performance)
-        const image = sharp(imageBuffer);
-        const metadata = await image.metadata();
-        const originalWidth = metadata.width || 0;
-        const originalHeight = metadata.height || 0;
-        if (originalWidth === 0 || originalHeight === 0) {
-            throw createError('Invalid image dimensions', 400, 'INVALID_IMAGE_DIMENSIONS');
-        }
-        // Resize if too large (for faster processing)
-        let workingWidth = originalWidth;
-        let workingHeight = originalHeight;
-        let workingImage = image;
-        if (originalWidth > MAX_DETECTION_WIDTH || originalHeight > MAX_DETECTION_HEIGHT) {
-            const scale = Math.min(MAX_DETECTION_WIDTH / originalWidth, MAX_DETECTION_HEIGHT / originalHeight);
-            workingWidth = Math.floor(originalWidth * scale);
-            workingHeight = Math.floor(originalHeight * scale);
-            workingImage = image.resize(workingWidth, workingHeight, {
-                fit: 'inside',
-                withoutEnlargement: true,
-            });
-            if (process.env.LOG_LEVEL === 'debug') {
-                console.log(`[DocumentDetect] [${reqId}] Resized for detection`, {
-                    original: `${originalWidth}x${originalHeight}`,
-                    working: `${workingWidth}x${workingHeight}`,
-                });
-            }
-        }
-        // Step 2: Try OpenCV-based detection (if available)
-        // NOTE: OpenCV detection is optional and requires opencv4nodejs package
-        // For now, we skip OpenCV and use smart crop fallback
-        // To enable OpenCV: npm install opencv4nodejs (requires OpenCV system library)
-        try {
-            const opencvResult = await detectWithOpenCV(await workingImage.raw().toBuffer({ resolveWithObject: true }), workingWidth, workingHeight, reqId);
-            if (opencvResult.success && opencvResult.documentDetected) {
-                const duration = Date.now() - startTime;
-                if (process.env.LOG_LEVEL === 'debug') {
-                    console.log(`[DocumentDetect] [${reqId}] Document detected with OpenCV`, {
-                        strategy: opencvResult.strategy,
-                        duration: `${duration}ms`,
-                    });
-                }
-                return {
-                    ...opencvResult,
-                    metadata: {
-                        originalWidth,
-                        originalHeight,
-                    },
-                };
-            }
-        }
-        catch (opencvError) {
-            // OpenCV not available or not implemented - this is expected
-            // Continue to smart crop fallback
-            if (process.env.LOG_LEVEL === 'debug' && !opencvError.message.includes('not available')) {
-                console.warn(`[DocumentDetect] [${reqId}] OpenCV detection failed:`, opencvError.message);
-            }
-        }
-        // Step 3: Fallback to smart crop
-        const fallbackResult = await smartCropFallback(workingImage, workingWidth, workingHeight, reqId);
-        const duration = Date.now() - startTime;
-        if (process.env.LOG_LEVEL === 'debug') {
-            console.log(`[DocumentDetect] [${reqId}] Using fallback crop`, {
-                strategy: fallbackResult.strategy,
-                duration: `${duration}ms`,
-            });
-        }
-        return {
-            ...fallbackResult,
-            metadata: {
-                originalWidth,
-                originalHeight,
-            },
-        };
-    }
-    catch (error) {
-        const duration = Date.now() - startTime;
-        if (process.env.LOG_LEVEL === 'debug') {
-            console.error(`[DocumentDetect] [${reqId}] Detection failed`, {
-                error: error.message,
-                duration: `${duration}ms`,
-            });
-        }
-        if (error.statusCode) {
-            throw error;
-        }
-        // Final fallback: return original image with warning
-        return {
-            success: true,
-            documentDetected: false,
-            croppedBuffer: imageBuffer,
-            width: (await sharp(imageBuffer).metadata()).width || 0,
-            height: (await sharp(imageBuffer).metadata()).height || 0,
-            strategy: 'fallback',
-            confidence: 0,
-            metadata: {
-                originalWidth: (await sharp(imageBuffer).metadata()).width || 0,
-                originalHeight: (await sharp(imageBuffer).metadata()).height || 0,
-            },
-        };
-    }
+    const meta = await sharp(imageBuffer).metadata();
+    return {
+        success: true,
+        documentDetected: false,
+        croppedBuffer: imageBuffer,
+        width: meta.width || 0,
+        height: meta.height || 0,
+        strategy: 'fallback',
+        confidence: 0,
+        metadata: {
+            originalWidth: meta.width || 0,
+            originalHeight: meta.height || 0,
+        },
+    };
 }
 /**
  * Detect document using OpenCV (if available)

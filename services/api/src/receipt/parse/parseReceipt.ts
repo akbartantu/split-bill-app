@@ -5,12 +5,12 @@
  * Now uses improved parsing with sanity checks and auto-correction.
  */
 
-import { createError } from '../../middleware/errorHandler';
-import { parseLineItem } from './parseLineItems';
-import { checkItemSanity } from '../validate/sanityChecks';
-import { autoCorrectAmount } from '../validate/autoCorrectAmounts';
-import { normalizeOcrLine } from './normalizeOcrLine';
-import { reconstructReceiptLine } from './reconstructReceiptLine';
+import { createError } from '../../middleware/errorHandler.js';
+import { parseLineItem } from './parseLineItems.js';
+import { checkItemSanity } from '../validate/sanityChecks.js';
+import { autoCorrectAmount } from '../validate/autoCorrectAmounts.js';
+import { normalizeOcrLine } from './normalizeOcrLine.js';
+import { reconstructReceiptLine } from './reconstructReceiptLine.js';
 
 export interface ParsedReceiptItem {
   id: string;

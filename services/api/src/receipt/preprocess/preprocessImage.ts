@@ -5,7 +5,7 @@
  * Uses sharp if available, otherwise falls back to basic validation.
  */
 
-import { createError } from '../../middleware/errorHandler';
+import { createError } from '../../middleware/errorHandler.js';
 
 export interface PreprocessedImage {
   buffer: Buffer;

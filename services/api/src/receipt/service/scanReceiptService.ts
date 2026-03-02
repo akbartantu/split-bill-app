@@ -12,14 +12,14 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { GoogleSheetsClient } from '../../clients/GoogleSheetsClient';
-import { detectAndCropReceipt } from '../preprocess/detectAndCropReceipt';
-import { runReceiptOCR } from '../ocr/runReceiptOcr';
-import { normalizeOcrLine, normalizeOcrLines } from '../parse/normalizeOcrLine';
-import { reconstructReceiptLine } from '../parse/reconstructReceiptLine';
-import { checkReceiptItemSanity } from '../validate/receiptSanityChecks';
-import { createError } from '../../middleware/errorHandler';
-import { parseReceiptWithOpenAI } from '../parse/parseWithOpenAI';
+import { GoogleSheetsClient } from '../../clients/GoogleSheetsClient.js';
+import { detectAndCropReceipt } from '../preprocess/detectAndCropReceipt.js';
+import { runReceiptOCR } from '../ocr/runReceiptOcr.js';
+import { normalizeOcrLine, normalizeOcrLines } from '../parse/normalizeOcrLine.js';
+import { reconstructReceiptLine } from '../parse/reconstructReceiptLine.js';
+import { checkReceiptItemSanity } from '../validate/receiptSanityChecks.js';
+import { createError } from '../../middleware/errorHandler.js';
+import { parseReceiptWithOpenAI } from '../parse/parseWithOpenAI.js';
 
 const DEBUG_LOG_DIR = path.join(process.cwd(), '.cursor');
 const DEBUG_LOG_PATH = path.join(DEBUG_LOG_DIR, 'debug.log');

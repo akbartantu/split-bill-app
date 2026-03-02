@@ -5,8 +5,8 @@
  * Currently supports Tesseract.js (can be extended to Google Vision).
  */
 
-import { createError } from '../../middleware/errorHandler';
-import { runOpenAIOCR } from './runOpenAiOcr';
+import { createError } from '../../middleware/errorHandler.js';
+import { runOpenAIOCR } from './runOpenAiOcr.js';
 
 export interface OCRResult {
   text: string;

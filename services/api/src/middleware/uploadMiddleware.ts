@@ -7,7 +7,7 @@
 
 import multer, { FileFilterCallback } from 'multer';
 import { Request } from 'express';
-import { createError } from './errorHandler';
+import { createError } from './errorHandler.js';
 
 // Maximum file size: 5MB
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB

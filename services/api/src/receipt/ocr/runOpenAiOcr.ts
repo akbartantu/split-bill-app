@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
-import { createError } from '../../middleware/errorHandler';
-import type { OCRResult } from './runOcr';
+import { createError } from '../../middleware/errorHandler.js';
+import type { OCRResult } from './runOcr.js';
 
 let openAiClient: OpenAI | null = null;
 

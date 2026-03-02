@@ -5,10 +5,10 @@
  */
 
 import { Router, Request, Response, NextFunction } from 'express';
-import { uploadReceiptImage, validateUploadedFile } from '../middleware/uploadMiddleware';
-import { processReceiptUpload } from '../receipt/service/receiptService';
-import { createError } from '../middleware/errorHandler';
-import { GoogleSheetsClient } from '../clients/GoogleSheetsClient';
+import { uploadReceiptImage, validateUploadedFile } from '../middleware/uploadMiddleware.js';
+import { processReceiptUpload } from '../receipt/service/receiptService.js';
+import { createError } from '../middleware/errorHandler.js';
+import { GoogleSheetsClient } from '../clients/GoogleSheetsClient.js';
 
 const router = Router();
 
