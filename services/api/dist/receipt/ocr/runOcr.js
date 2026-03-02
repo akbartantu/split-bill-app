@@ -4,8 +4,8 @@
  * Runs OCR on preprocessed images with timeout and error handling.
  * Currently supports Tesseract.js (can be extended to Google Vision).
  */
-import { createError } from '../../middleware/errorHandler';
-import { runOpenAIOCR } from './runOpenAiOcr';
+import { createError } from '../../middleware/errorHandler.js';
+import { runOpenAIOCR } from './runOpenAiOcr.js';
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
 /**
  * Run OCR with timeout and error handling

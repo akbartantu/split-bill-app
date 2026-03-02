@@ -8,7 +8,6 @@
  * - CLAHE contrast enhancement
  * - Light denoise (preserve text edges)
  */
-import { createError } from '../../middleware/errorHandler';
 import sharp from 'sharp';
 /**
  * Maximum dimensions before detection (resize first for performance)
@@ -36,95 +35,25 @@ const MIN_DIMENSION_FOR_OCR = 800;
  */
 export async function detectAndCropReceipt(imageBuffer, mimetype, requestId) {
     const reqId = requestId || `req_${Date.now()}`;
-    const startTime = Date.now();
+    // New behavior: do not crop thermal receipts at all.
+    // Always pass the original image buffer through to OCR.
     if (process.env.LOG_LEVEL === 'debug') {
-        console.log(`[ReceiptDetect] [${reqId}] Starting thermal receipt detection`);
+        console.log(`[ReceiptDetect] [${reqId}] Thermal detection disabled, using original image (no crop)`);
     }
-    try {
-        // Step 1: Load and resize if needed
-        const image = sharp(imageBuffer);
-        const metadata = await image.metadata();
-        const originalWidth = metadata.width || 0;
-        const originalHeight = metadata.height || 0;
-        if (originalWidth === 0 || originalHeight === 0) {
-            throw createError('Invalid image dimensions', 400, 'INVALID_IMAGE_DIMENSIONS');
-        }
-        // Resize if too large (for faster processing)
-        let workingWidth = originalWidth;
-        let workingHeight = originalHeight;
-        let workingImage = image;
-        if (originalWidth > MAX_DETECTION_WIDTH || originalHeight > MAX_DETECTION_HEIGHT) {
-            const scale = Math.min(MAX_DETECTION_WIDTH / originalWidth, MAX_DETECTION_HEIGHT / originalHeight);
-            workingWidth = Math.floor(originalWidth * scale);
-            workingHeight = Math.floor(originalHeight * scale);
-            workingImage = image.resize(workingWidth, workingHeight, {
-                fit: 'inside',
-                withoutEnlargement: true,
-            });
-            if (process.env.LOG_LEVEL === 'debug') {
-                console.log(`[ReceiptDetect] [${reqId}] Resized for detection`, {
-                    original: `${originalWidth}x${originalHeight}`,
-                    working: `${workingWidth}x${workingHeight}`,
-                });
-            }
-        }
-        // Step 2: Preprocess for thermal receipt (grayscale + normalize + light sharpen)
-        let processed = workingImage.grayscale();
-        processed = processed.normalise().modulate({
-            brightness: 1.1,
-            saturation: 0,
-        });
-        processed = processed.sharpen(0.5, 1, 2);
-        // Step 3: Try document detection (OpenCV placeholder)
-        // For now, use smart crop fallback optimized for thermal receipts
-        const fallbackResult = await smartCropForThermalReceipt(processed, workingWidth, workingHeight, reqId);
-        const duration = Date.now() - startTime;
-        if (process.env.LOG_LEVEL === 'debug') {
-            console.log(`[ReceiptDetect] [${reqId}] Detection completed`, {
-                strategy: fallbackResult.strategy,
-                duration: `${duration}ms`,
-            });
-        }
-        return {
-            ...fallbackResult,
-            metadata: {
-                originalWidth,
-                originalHeight,
-            },
-        };
-    }
-    catch (error) {
-        const duration = Date.now() - startTime;
-        if (process.env.LOG_LEVEL === 'debug') {
-            console.error(`[ReceiptDetect] [${reqId}] Detection failed`, {
-                error: error.message,
-                duration: `${duration}ms`,
-            });
-        }
-        if (error.statusCode) {
-            throw error;
-        }
-        // Final fallback: return original image resized
-        const resized = sharp(imageBuffer).resize(TARGET_RECEIPT_WIDTH, null, {
-            fit: 'inside',
-            withoutEnlargement: false,
-        });
-        const buffer = await resized.jpeg({ quality: 90 }).toBuffer();
-        const metadata = await resized.metadata();
-        return {
-            success: true,
-            documentDetected: false,
-            croppedBuffer: buffer,
-            width: metadata.width || TARGET_RECEIPT_WIDTH,
-            height: metadata.height || 0,
-            strategy: 'fallback',
-            confidence: 0.3,
-            metadata: {
-                originalWidth: (await sharp(imageBuffer).metadata()).width || 0,
-                originalHeight: (await sharp(imageBuffer).metadata()).height || 0,
-            },
-        };
-    }
+    const meta = await sharp(imageBuffer).metadata();
+    return {
+        success: true,
+        documentDetected: false,
+        croppedBuffer: imageBuffer,
+        width: meta.width || 0,
+        height: meta.height || 0,
+        strategy: 'fallback',
+        confidence: 0,
+        metadata: {
+            originalWidth: meta.width || 0,
+            originalHeight: meta.height || 0,
+        },
+    };
 }
 /**
  * Smart crop optimized for thermal receipts

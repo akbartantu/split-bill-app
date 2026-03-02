@@ -5,7 +5,7 @@
  * Matches client-side implementation for consistency.
  */
 
-import { extractCanonicalName } from './extractCanonicalName';
+import { extractCanonicalName } from './extractCanonicalName.js';
 
 export interface ParsedLineItem {
   quantity: number;

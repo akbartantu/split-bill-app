@@ -4,7 +4,7 @@
  * Preprocesses images before OCR to reduce failures and memory usage.
  * Uses sharp if available, otherwise falls back to basic validation.
  */
-import { createError } from '../../middleware/errorHandler';
+import { createError } from '../../middleware/errorHandler.js';
 /**
  * Maximum dimensions after preprocessing
  */

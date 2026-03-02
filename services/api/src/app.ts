@@ -6,9 +6,9 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import { errorHandler } from './middleware/errorHandler';
-import { logger } from './middleware/logger';
-import { receiptRoutes } from './routes/receipts';
+import { errorHandler } from './middleware/errorHandler.js';
+import { logger } from './middleware/logger.js';
+import { receiptRoutes } from './routes/receipts.js';
 
 export const app = express();
 

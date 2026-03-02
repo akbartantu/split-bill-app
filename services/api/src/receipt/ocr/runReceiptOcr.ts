@@ -5,8 +5,8 @@
  * Uses PSM modes best suited for column-based text.
  */
 
-import { createError } from '../../middleware/errorHandler';
-import { runOpenAIOCR } from './runOpenAiOcr';
+import { createError } from '../../middleware/errorHandler.js';
+import { runOpenAIOCR } from './runOpenAiOcr.js';
 
 export interface ReceiptOCRResult {
   text: string;

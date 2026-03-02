@@ -4,7 +4,7 @@
  * Correctly extracts quantity, unit price, and line total from receipt lines.
  * Matches client-side implementation for consistency.
  */
-import { extractCanonicalName } from './extractCanonicalName';
+import { extractCanonicalName } from './extractCanonicalName.js';
 /**
  * Parse a single receipt line into structured item data
  */

@@ -7,7 +7,7 @@
  * Uses OpenCV for edge detection and perspective transformation.
  */
 
-import { createError } from '../../middleware/errorHandler';
+import { createError } from '../../middleware/errorHandler.js';
 import sharp from 'sharp';
 
 export interface DocumentDetectionResult {

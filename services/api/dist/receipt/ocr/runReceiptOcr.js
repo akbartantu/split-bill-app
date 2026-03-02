@@ -4,8 +4,8 @@
  * OCR optimized for thermal restaurant receipts with column alignment.
  * Uses PSM modes best suited for column-based text.
  */
-import { createError } from '../../middleware/errorHandler';
-import { runOpenAIOCR } from './runOpenAiOcr';
+import { createError } from '../../middleware/errorHandler.js';
+import { runOpenAIOCR } from './runOpenAiOcr.js';
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
 /**
  * PSM modes optimized for receipts:

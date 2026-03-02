@@ -12,7 +12,7 @@
  * - LINE TOTAL = last price (or single price if qty == 1)
  */
 
-import { extractCanonicalName } from './extractCanonicalName';
+import { extractCanonicalName } from './extractCanonicalName.js';
 
 export interface ReconstructedLine {
   quantity: number;

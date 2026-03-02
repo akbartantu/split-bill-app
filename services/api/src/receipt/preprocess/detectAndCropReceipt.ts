@@ -9,7 +9,7 @@
  * - Light denoise (preserve text edges)
  */
 
-import { createError } from '../../middleware/errorHandler';
+import { createError } from '../../middleware/errorHandler.js';
 import sharp from 'sharp';
 
 export interface ReceiptDetectionResult {

@@ -4,7 +4,7 @@
  * Starts the Express server with all routes and middleware.
  */
 
-import { app } from './app';
+import { app } from './app.js';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 

@@ -4,11 +4,11 @@
  * Parses OCR text into structured receipt data with validation.
  * Now uses improved parsing with sanity checks and auto-correction.
  */
-import { parseLineItem } from './parseLineItems';
-import { checkItemSanity } from '../validate/sanityChecks';
-import { autoCorrectAmount } from '../validate/autoCorrectAmounts';
-import { normalizeOcrLine } from './normalizeOcrLine';
-import { reconstructReceiptLine } from './reconstructReceiptLine';
+import { parseLineItem } from './parseLineItems.js';
+import { checkItemSanity } from '../validate/sanityChecks.js';
+import { autoCorrectAmount } from '../validate/autoCorrectAmounts.js';
+import { normalizeOcrLine } from './normalizeOcrLine.js';
+import { reconstructReceiptLine } from './reconstructReceiptLine.js';
 /**
  * Parse receipt text with validation
  */

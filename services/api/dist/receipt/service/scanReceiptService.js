@@ -11,13 +11,13 @@
  */
 import * as fs from 'fs';
 import * as path from 'path';
-import { detectAndCropReceipt } from '../preprocess/detectAndCropReceipt';
-import { runReceiptOCR } from '../ocr/runReceiptOcr';
-import { normalizeOcrLines } from '../parse/normalizeOcrLine';
-import { reconstructReceiptLine } from '../parse/reconstructReceiptLine';
-import { checkReceiptItemSanity } from '../validate/receiptSanityChecks';
-import { createError } from '../../middleware/errorHandler';
-import { parseReceiptWithOpenAI } from '../parse/parseWithOpenAI';
+import { detectAndCropReceipt } from '../preprocess/detectAndCropReceipt.js';
+import { runReceiptOCR } from '../ocr/runReceiptOcr.js';
+import { normalizeOcrLines } from '../parse/normalizeOcrLine.js';
+import { reconstructReceiptLine } from '../parse/reconstructReceiptLine.js';
+import { checkReceiptItemSanity } from '../validate/receiptSanityChecks.js';
+import { createError } from '../../middleware/errorHandler.js';
+import { parseReceiptWithOpenAI } from '../parse/parseWithOpenAI.js';
 const DEBUG_LOG_DIR = path.join(process.cwd(), '.cursor');
 const DEBUG_LOG_PATH = path.join(DEBUG_LOG_DIR, 'debug.log');
 function debugLog(msg) {
@@ -111,15 +111,12 @@ export async function scanReceipt(imageBuffer, mimetype, receiptId, sheetsClient
         if (parserProvider === 'openai') {
             try {
                 const aiParsed = await parseReceiptWithOpenAI(ocrResult.text, reqId);
-                if (!aiParsed.success || !aiParsed.data || !Array.isArray(aiParsed.data.items)) {
-                    throw new Error(aiParsed.error || 'OpenAI parser returned invalid response');
-                }
-                const items = aiParsed.data.items.map((item) => ({
+                const items = (aiParsed.items || []).map(item => ({
                     item_id: generateId(),
                     receipt_id: receiptId,
                     quantity: item.quantity ?? 1,
                     item_name: item.name,
-                    unit_price: item.unitPrice,
+                    unit_price: item.unitPrice ?? null,
                     line_total: item.totalPrice,
                     confidence_score: 0.9,
                     needs_review: false,
@@ -127,20 +124,20 @@ export async function scanReceipt(imageBuffer, mimetype, receiptId, sheetsClient
                     original_ocr_line: item.name,
                 }));
                 const itemsSum = items.reduce((sum, i) => sum + i.line_total, 0);
-                const hasTotalPaid = typeof aiParsed.data.total_paid === 'number';
-                const totalMatches = hasTotalPaid && Math.abs(itemsSum - (aiParsed.data.total_paid ?? 0)) < 2;
+                const hasTotal = typeof aiParsed.total === 'number';
+                const totalMatches = hasTotal && Math.abs(itemsSum - (aiParsed.total ?? 0)) < 2;
                 const avgItemConfidence = items.length > 0
                     ? items.reduce((sum, i) => sum + i.confidence_score, 0) / items.length
                     : 0;
-                const overallConfidence = Math.min(1, avgItemConfidence * 0.6 +
+                const overallConfidence = Math.min(1, (avgItemConfidence * 0.6 +
                     (items.length > 0 ? 0.2 : 0) +
-                    (hasTotalPaid ? 0.1 : 0) +
-                    (totalMatches ? 0.1 : 0));
+                    (hasTotal ? 0.1 : 0) +
+                    (totalMatches ? 0.1 : 0)));
                 const allocateTax = (lineTotal) => {
-                    const gst = aiParsed.data.gst ?? null;
-                    if (gst == null || gst === 0 || itemsSum <= 0 || lineTotal <= 0)
+                    const tax = aiParsed.tax ?? null;
+                    if (tax == null || tax === 0 || itemsSum <= 0 || lineTotal <= 0)
                         return null;
-                    return Math.round((gst * (lineTotal / itemsSum)) * 100) / 100;
+                    return Math.round((tax * (lineTotal / itemsSum)) * 100) / 100;
                 };
                 const totalDuration = Date.now() - startTime;
                 if (process.env.LOG_LEVEL === 'debug') {
@@ -154,7 +151,7 @@ export async function scanReceipt(imageBuffer, mimetype, receiptId, sheetsClient
                     success: items.length > 0,
                     receipt: {
                         id: generateId(),
-                        items: items.map((item) => ({
+                        items: items.map(item => ({
                             id: item.item_id,
                             name: item.item_name,
                             quantity: item.quantity,
@@ -167,13 +164,13 @@ export async function scanReceipt(imageBuffer, mimetype, receiptId, sheetsClient
                             rawText: item.original_ocr_line,
                         })),
                         confidence: overallConfidence,
-                        needsReview: items.some((i) => i.needs_review) || items.length === 0,
+                        needsReview: items.some(i => i.needs_review) || items.length === 0,
                     },
                     merchant: undefined,
                     date: undefined,
-                    subtotal: aiParsed.data.subtotal ?? undefined,
-                    tax: aiParsed.data.gst ?? undefined,
-                    total: aiParsed.data.total_paid ?? undefined,
+                    subtotal: aiParsed.subtotal ?? undefined,
+                    tax: aiParsed.tax ?? undefined,
+                    total: aiParsed.total ?? undefined,
                     documentDetected: documentDetected.documentDetected,
                     detectionStrategy: documentDetected.strategy,
                     message: items.length === 0

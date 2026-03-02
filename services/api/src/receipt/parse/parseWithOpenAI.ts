@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { createError } from '../../middleware/errorHandler';
+import { createError } from '../../middleware/errorHandler.js';
 
 let openaiClient: OpenAI | null = null;
 

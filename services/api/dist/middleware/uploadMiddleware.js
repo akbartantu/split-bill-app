@@ -5,7 +5,7 @@
  * Field name: "receipt_image"
  */
 import multer from 'multer';
-import { createError } from './errorHandler';
+import { createError } from './errorHandler.js';
 // Maximum file size: 5MB
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 // Allowed MIME types

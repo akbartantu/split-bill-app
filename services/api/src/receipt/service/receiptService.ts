@@ -5,13 +5,13 @@
  * Handles OCR, parsing, and saving to spreadsheet.
  */
 
-import { GoogleSheetsClient } from '../../clients/GoogleSheetsClient';
-import { detectAndCropDocument } from '../preprocess/documentDetectAndCrop';
-import { preprocessImage } from '../preprocess/preprocessImage';
-import { runOCR } from '../ocr/runOcr';
-import { parseReceipt } from '../parse/parseReceipt';
-import { scanReceipt } from './scanReceiptService';
-import { createError } from '../../middleware/errorHandler';
+import { GoogleSheetsClient } from '../../clients/GoogleSheetsClient.js';
+import { detectAndCropDocument } from '../preprocess/documentDetectAndCrop.js';
+import { preprocessImage } from '../preprocess/preprocessImage.js';
+import { runOCR } from '../ocr/runOcr.js';
+import { parseReceipt } from '../parse/parseReceipt.js';
+import { scanReceipt } from './scanReceiptService.js';
+import { createError } from '../../middleware/errorHandler.js';
 
 export interface ReceiptUploadResult {
   success: boolean;
