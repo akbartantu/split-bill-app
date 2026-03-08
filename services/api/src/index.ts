@@ -1,20 +1,12 @@
 /**
  * API Server Entry Point
- * 
+ *
  * Starts the Express server with all routes and middleware.
+ * loadEnv must be imported first so ADMIN_TOKEN etc. are set before app (and admin routes) load.
  */
 
+import './loadEnv.js';
 import { app } from './app.js';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
-
-// Load environment variables
-// 1) Local .env in services/api
-dotenv.config();
-// 2) Fallback to project root .env (On Production/.env) so shared vars like OPENAI_API_KEY are available
-dotenv.config({
-  path: path.join(process.cwd(), '..', '.env'),
-});
 
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';

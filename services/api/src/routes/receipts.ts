@@ -9,6 +9,7 @@ import { uploadReceiptImage, validateUploadedFile } from '../middleware/uploadMi
 import { processReceiptUpload } from '../receipt/service/receiptService.js';
 import { createError } from '../middleware/errorHandler.js';
 import { GoogleSheetsClient } from '../clients/GoogleSheetsClient.js';
+import { recordReceiptUse } from '../analytics/analyticsService.js';
 
 const router = Router();
 
@@ -111,7 +112,13 @@ async function handleReceiptUpload(req: Request, res: Response, next: NextFuncti
         success: result.success,
       });
     }
-    
+
+    // Track receipt use for analytics (fire-and-forget)
+    recordReceiptUse(req).then(
+      () => {},
+      () => {}
+    );
+
     res.json({
       ok: true,
       data: result,

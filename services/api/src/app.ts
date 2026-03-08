@@ -8,7 +8,9 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { errorHandler } from './middleware/errorHandler.js';
 import { logger } from './middleware/logger.js';
+import { analyticsMiddleware } from './middleware/analyticsMiddleware.js';
 import { receiptRoutes } from './routes/receipts.js';
+import { getAdminStats } from './routes/admin.js';
 
 export const app = express();
 
@@ -54,6 +56,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Request logging
 app.use(logger);
 
+// Analytics (visitor count, one per IP per day; skips health and admin)
+app.use(analyticsMiddleware);
+
 // Health check
 app.get('/health', (req: Request, res: Response) => {
   res.json({ 
@@ -74,6 +79,10 @@ app.get('/api/health', (req: Request, res: Response) => {
 
 // API routes
 app.use('/api/receipts', receiptRoutes);
+
+// Admin (token-protected; not linked from app)
+app.get('/admin', getAdminStats);
+app.get('/internal/stats', getAdminStats);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
