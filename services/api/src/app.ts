@@ -12,6 +12,7 @@ import { analyticsMiddleware } from './middleware/analyticsMiddleware.js';
 import { receiptRoutes } from './routes/receipts.js';
 import { getAdminStats } from './routes/admin.js';
 import { handleTelegramWebhook } from './routes/telegramWebhook.js';
+import { postReceiptLink, getReceiptLinkByToken } from './routes/receiptLink.js';
 
 export const app = express();
 
@@ -80,6 +81,8 @@ app.get('/api/health', (req: Request, res: Response) => {
 
 // API routes
 app.use('/api/receipts', receiptRoutes);
+app.post('/api/receipt-link', postReceiptLink);
+app.get('/api/receipt-link/:token', getReceiptLinkByToken);
 
 // Telegram webhook (optional: set TELEGRAM_BOT_TOKEN and set webhook URL in Telegram)
 app.post('/webhooks/telegram', handleTelegramWebhook);

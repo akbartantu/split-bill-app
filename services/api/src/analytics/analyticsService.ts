@@ -11,7 +11,7 @@ import { Request } from 'express';
 import { GoogleSheetsClient } from '../clients/GoogleSheetsClient.js';
 
 const ANALYTICS_SHEET_NAME = 'Analytics';
-const HEADERS = ['Date', 'EventType', 'IpHash'];
+const HEADERS = ['Date', 'Time', 'EventType', 'IpHash'];
 
 /** In-memory set of "date:ipHash" we already recorded for visit (avoids duplicate rows per day) */
 const visitKeysRecorded = new Set<string>();
@@ -60,6 +60,11 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** Current time in HH:mm:ss (UTC). */
+function nowTime(): string {
+  return new Date().toISOString().slice(11, 19);
+}
+
 /**
  * Ensure the Analytics sheet exists and has headers. Call before first append/read.
  */
@@ -90,7 +95,7 @@ export async function recordVisit(req: Request): Promise<void> {
     if (visitKeysRecorded.has(key)) return;
 
     await ensureSheet(client);
-    await client.appendRow(ANALYTICS_SHEET_NAME, [date, 'visit', ipHash]);
+    await client.appendRow(ANALYTICS_SHEET_NAME, [date, nowTime(), 'visit', ipHash]);
     visitKeysRecorded.add(key);
   } catch (err: any) {
     if (process.env.LOG_LEVEL === 'debug') {
@@ -112,7 +117,7 @@ export async function recordReceiptUse(req: Request): Promise<void> {
     const date = today();
 
     await ensureSheet(client);
-    await client.appendRow(ANALYTICS_SHEET_NAME, [date, 'receipt_use', ipHash]);
+    await client.appendRow(ANALYTICS_SHEET_NAME, [date, nowTime(), 'receipt_use', ipHash]);
   } catch (err: any) {
     if (process.env.LOG_LEVEL === 'debug') {
       console.warn('[Analytics] recordReceiptUse failed:', err?.message);
@@ -151,8 +156,9 @@ export async function readStats(): Promise<AnalyticsStats> {
 
     for (const row of rows) {
       const date = String(row[0] || '').trim();
-      const eventType = String(row[1] || '').trim().toLowerCase();
-      const ipHash = String(row[2] || '').trim();
+      const hasTimeColumn = row.length >= 4;
+      const eventType = String((hasTimeColumn ? row[2] : row[1]) || '').trim().toLowerCase();
+      const ipHash = String((hasTimeColumn ? row[3] : row[2]) || '').trim();
 
       if (!date) continue;
 

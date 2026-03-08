@@ -159,6 +159,9 @@ interface BillState {
   // Event/template
   setBillEventLabel: (label: string) => void;
   cloneBillFromTemplate: (templateBill: Bill) => void;
+
+  /** Load receipt + items from deep-link data (e.g. Telegram "Open in website"). Sets step to participants. */
+  loadReceiptFromLink: (data: { receiptName: string; items: { name: string; totalPrice: number; quantity?: number }[]; total?: number; currency?: string }) => void;
 }
 
 export const useBillStore = create<BillState>()(
@@ -538,6 +541,30 @@ export const useBillStore = create<BillState>()(
           },
         };
       }),
+
+      loadReceiptFromLink: (data) => {
+        const { resetBill, setCurrencyCode, addReceipt, addItem, setStep } = get();
+        resetBill();
+        const currency = data.currency || 'USD';
+        setCurrencyCode(currency);
+        const receiptId = addReceipt({ receiptName: data.receiptName || 'Receipt' });
+        const currencyCode = get().currentBill.currencyCode || 'USD';
+        for (const item of data.items || []) {
+          const qty = item.quantity ?? 1;
+          const totalMinor = toMinor(item.totalPrice ?? 0, currencyCode);
+          const unitMinor = qty > 0 ? Math.round(totalMinor / qty) : totalMinor;
+          addItem({
+            name: item.name || 'Item',
+            quantity: qty,
+            unitPriceMinor: unitMinor,
+            lineTotalMinor: totalMinor,
+            assignees: [],
+            isShared: false,
+            receiptId,
+          });
+        }
+        setStep('participants');
+      },
     }),
     {
       name: 'billsplit-storage',
