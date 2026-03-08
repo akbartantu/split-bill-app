@@ -13,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { getNetBalanceSummary } from '@/selectors/netBalances';
 import { getSettlementFromNet } from '@/selectors/settlement';
+import { buildApiUrl } from '@/lib/apiBase';
 
 const container = {
   hidden: { opacity: 0 },
@@ -32,7 +33,8 @@ export function SummaryStep() {
   const [copied, setCopied] = useState(false);
   const [expandedPersonIds, setExpandedPersonIds] = useState<Set<string>>(new Set());
   const prevPersonKey = useRef<string>('');
-  
+  const splitGeneratedRecorded = useRef(false);
+
   const summaries = calculateBillSplit(currentBill);
   const grandTotal = calculateGrandTotal(currentBill);
   const currencyCode = currentBill.currencyCode || currentBill.currency || 'USD';
@@ -56,6 +58,19 @@ export function SummaryStep() {
       prevPersonKey.current = personKey;
     }
   }, [personKey, summaries]);
+
+  // Record analytics: user reached Summary step (generated a split bill)
+  useEffect(() => {
+    if (
+      splitGeneratedRecorded.current ||
+      currentBill.participants.length === 0 ||
+      currentBill.items.length === 0
+    ) {
+      return;
+    }
+    splitGeneratedRecorded.current = true;
+    fetch(buildApiUrl('/api/analytics/split-generated'), { method: 'GET' }).catch(() => {});
+  }, [currentBill.participants.length, currentBill.items.length]);
 
   const handleShare = async () => {
     const text = generateShareText(currentBill, summaries);

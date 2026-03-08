@@ -25,7 +25,7 @@ function htmlPage(stats: AnalyticsStats): string {
     .reverse()
     .map(
       (d) =>
-        `<tr><td>${d.date}</td><td>${d.visitors}</td><td>${d.receiptUses}</td></tr>`
+        `<tr><td>${d.date}</td><td>${d.visitors}</td><td>${d.receiptUses}</td><td>${d.splitGenerated}</td></tr>`
     )
     .join('');
   return `<!DOCTYPE html>
@@ -49,10 +49,11 @@ function htmlPage(stats: AnalyticsStats): string {
   <div class="totals">
     <p><strong>Total visitors (unique IPs per day):</strong> ${stats.totalVisitors}</p>
     <p><strong>Total receipt uses:</strong> ${stats.totalReceiptUses}</p>
+    <p><strong>Total split bills generated:</strong> ${stats.totalSplitGenerated}</p>
   </div>
   <table>
-    <thead><tr><th>Date</th><th>Visitors</th><th>Receipt uses</th></tr></thead>
-    <tbody>${rows.length ? rows : '<tr><td colspan="3">No data yet</td></tr>'}</tbody>
+    <thead><tr><th>Date</th><th>Visitors</th><th>Receipt uses</th><th>Split generated</th></tr></thead>
+    <tbody>${rows.length ? rows : '<tr><td colspan="4">No data yet</td></tr>'}</tbody>
   </table>
 </body>
 </html>`;

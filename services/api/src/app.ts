@@ -13,6 +13,7 @@ import { receiptRoutes } from './routes/receipts.js';
 import { getAdminStats } from './routes/admin.js';
 import { handleTelegramWebhook } from './routes/telegramWebhook.js';
 import { postReceiptLink, getReceiptLinkByToken } from './routes/receiptLink.js';
+import { recordSplitGenerated } from './analytics/analyticsService.js';
 
 export const app = express();
 
@@ -86,6 +87,14 @@ app.get('/api/receipt-link/:token', getReceiptLinkByToken);
 
 // Telegram webhook (optional: set TELEGRAM_BOT_TOKEN and set webhook URL in Telegram)
 app.post('/webhooks/telegram', handleTelegramWebhook);
+
+// Analytics: record split generated (called by frontend when user reaches Summary step)
+app.get('/api/analytics/split-generated', (req: Request, res: Response) => {
+  recordSplitGenerated(req).then(
+    () => res.status(204).send(),
+    () => res.status(204).send()
+  );
+});
 
 // Admin (token-protected; not linked from app)
 app.get('/admin', getAdminStats);

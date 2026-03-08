@@ -125,16 +125,39 @@ export async function recordReceiptUse(req: Request): Promise<void> {
   }
 }
 
+/**
+ * Record that a user reached the Summary step (generated a split bill). Call from frontend when Summary page is viewed.
+ */
+export async function recordSplitGenerated(req: Request): Promise<void> {
+  try {
+    const client = await getSheetsClient();
+    if (!client) return;
+
+    const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+    const ipHash = hashIp(ip);
+    const date = today();
+
+    await ensureSheet(client);
+    await client.appendRow(ANALYTICS_SHEET_NAME, [date, nowTime(), 'split_generated', ipHash]);
+  } catch (err: any) {
+    if (process.env.LOG_LEVEL === 'debug') {
+      console.warn('[Analytics] recordSplitGenerated failed:', err?.message);
+    }
+  }
+}
+
 export interface DailyStats {
   date: string;
   visitors: number;
   receiptUses: number;
+  splitGenerated: number;
 }
 
 export interface AnalyticsStats {
   byDay: DailyStats[];
   totalVisitors: number;
   totalReceiptUses: number;
+  totalSplitGenerated: number;
 }
 
 /**
@@ -144,11 +167,12 @@ export async function readStats(): Promise<AnalyticsStats> {
   const byDay: DailyStats[] = [];
   const visitorSetByDay = new Map<string, Set<string>>();
   const receiptCountByDay = new Map<string, number>();
+  const splitGeneratedByDay = new Map<string, number>();
 
   try {
     const client = await getSheetsClient();
     if (!client) {
-      return { byDay: [], totalVisitors: 0, totalReceiptUses: 0 };
+      return { byDay: [], totalVisitors: 0, totalReceiptUses: 0, totalSplitGenerated: 0 };
     }
 
     await ensureSheet(client);
@@ -167,28 +191,37 @@ export async function readStats(): Promise<AnalyticsStats> {
         visitorSetByDay.get(date)!.add(ipHash || '?');
       } else if (eventType === 'receipt_use') {
         receiptCountByDay.set(date, (receiptCountByDay.get(date) || 0) + 1);
+      } else if (eventType === 'split_generated') {
+        splitGeneratedByDay.set(date, (splitGeneratedByDay.get(date) || 0) + 1);
       }
     }
 
-    const allDates = new Set([...visitorSetByDay.keys(), ...receiptCountByDay.keys()]);
+    const allDates = new Set([
+      ...visitorSetByDay.keys(),
+      ...receiptCountByDay.keys(),
+      ...splitGeneratedByDay.keys(),
+    ]);
     const sortedDates = Array.from(allDates).sort();
 
     let totalVisitors = 0;
     let totalReceiptUses = 0;
+    let totalSplitGenerated = 0;
 
     for (const date of sortedDates) {
       const visitors = visitorSetByDay.get(date)?.size ?? 0;
       const receiptUses = receiptCountByDay.get(date) ?? 0;
+      const splitGenerated = splitGeneratedByDay.get(date) ?? 0;
       totalVisitors += visitors;
       totalReceiptUses += receiptUses;
-      byDay.push({ date, visitors, receiptUses });
+      totalSplitGenerated += splitGenerated;
+      byDay.push({ date, visitors, receiptUses, splitGenerated });
     }
 
-    return { byDay, totalVisitors, totalReceiptUses };
+    return { byDay, totalVisitors, totalReceiptUses, totalSplitGenerated };
   } catch (err: any) {
     if (process.env.LOG_LEVEL === 'debug') {
       console.warn('[Analytics] readStats failed:', err?.message);
     }
-    return { byDay: [], totalVisitors: 0, totalReceiptUses: 0 };
+    return { byDay: [], totalVisitors: 0, totalReceiptUses: 0, totalSplitGenerated: 0 };
   }
 }
