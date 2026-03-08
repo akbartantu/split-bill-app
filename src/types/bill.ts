@@ -73,6 +73,10 @@ export interface Bill {
   adjustments: Adjustment[];
   payments: Payment[];
   receipts?: Receipt[]; // Receipts associated with this bill
+  /** Optional label for trip/event grouping (e.g. "Bali trip", "Conference") */
+  eventLabel?: string;
+  /** If true, bill can be used as a template to clone for recurring splits */
+  isTemplate?: boolean;
   // Legacy support
   currency?: string;
   currencySymbol?: string;

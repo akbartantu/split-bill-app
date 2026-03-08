@@ -8,7 +8,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { recordVisit } from '../analytics/analyticsService.js';
 
-const SKIP_PATHS = ['/health', '/api/health', '/admin', '/internal/stats'];
+const SKIP_PATHS = ['/health', '/api/health', '/admin', '/internal/stats', '/webhooks/telegram'];
 
 export function analyticsMiddleware(req: Request, res: Response, next: NextFunction): void {
   const path = req.path || '';
