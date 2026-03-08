@@ -20,7 +20,7 @@ const item = {
 };
 
 export function ParticipantsStep() {
-  const { currentBill, addParticipant, removeParticipant, nextStep } = useBillStore();
+  const { currentBill, addParticipant, removeParticipant, nextStep, setBillName, setBillEventLabel } = useBillStore();
   const [newName, setNewName] = useState('');
 
   const handleAdd = () => {
@@ -51,6 +51,21 @@ export function ParticipantsStep() {
         </div>
         <h2 className="font-display text-2xl font-bold">Who's splitting?</h2>
         <p className="text-muted-foreground">Add at least 2 people to split the bill</p>
+      </div>
+
+      <div className="space-y-2">
+        <Input
+          placeholder="Bill name (optional)"
+          value={currentBill.name || ''}
+          onChange={(e) => setBillName(e.target.value)}
+          className="bg-muted/50"
+        />
+        <Input
+          placeholder="Event / trip (optional)"
+          value={currentBill.eventLabel || ''}
+          onChange={(e) => setBillEventLabel(e.target.value)}
+          className="bg-muted/50"
+        />
       </div>
 
       <div className="flex gap-2">

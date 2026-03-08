@@ -1,6 +1,7 @@
 import { useBillStore } from '@/store/billStore';
 import { motion } from 'framer-motion';
-import { PieChart, ArrowLeft, Share2, Copy, Check, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
+import { PieChart, ArrowLeft, Share2, Copy, Check, RotateCcw, ChevronDown, ChevronRight, Download } from 'lucide-react';
+import { exportBillToCsv, downloadBlob } from '@/lib/export';
 import { Button } from '@/components/ui/button';
 import { 
   calculateBillSplit, 
@@ -94,10 +95,22 @@ export function SummaryStep() {
     await copyToClipboard(lines.join('\n'));
   };
 
+  const handleExportBillCsv = () => {
+    const csv = exportBillToCsv(currentBill);
+    const name = (currentBill.name || 'bill').replace(/[^a-z0-9-_]/gi, '_');
+    downloadBlob(csv, `${name}-${new Date().toISOString().slice(0, 10)}.csv`);
+    toast.success('Bill exported as CSV');
+  };
+
   const handleNewBill = () => {
     saveBillToHistory();
     resetBill();
     toast.success('Bill saved! Starting fresh.');
+  };
+
+  const handleSaveAsTemplate = () => {
+    saveBillToHistory({ asTemplate: true });
+    toast.success('Saved as template. Use "Recent" to start from it.');
   };
 
   // Calculate max for relative bar sizing
@@ -126,11 +139,19 @@ export function SummaryStep() {
             Set “Paid by” for each receipt in Items to generate payments.
           </p>
         )}
-        {!missingPayers && transfers.length > 0 && (
-          <Button size="sm" variant="outline" onClick={handleCopyPayments}>
-            <Copy className="w-4 h-4 mr-2" />
-            Copy payment summary
-          </Button>
+        {!missingPayers && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {transfers.length > 0 && (
+              <Button size="sm" variant="outline" onClick={handleCopyPayments}>
+                <Copy className="w-4 h-4 mr-2" />
+                Copy payment summary
+              </Button>
+            )}
+            <Button size="sm" variant="outline" onClick={handleExportBillCsv}>
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+          </div>
         )}
       </div>
 
@@ -387,14 +408,23 @@ export function SummaryStep() {
         </Button>
       </div>
 
-      <Button
-        onClick={handleNewBill}
-        variant="ghost"
-        className="w-full text-muted-foreground hover:text-foreground"
-      >
-        <RotateCcw className="w-4 h-4 mr-2" />
-        Start New Bill
-      </Button>
+      <div className="flex gap-2 w-full">
+        <Button
+          onClick={handleSaveAsTemplate}
+          variant="ghost"
+          className="flex-1 text-muted-foreground hover:text-foreground"
+        >
+          Save as template
+        </Button>
+        <Button
+          onClick={handleNewBill}
+          variant="ghost"
+          className="flex-1 text-muted-foreground hover:text-foreground"
+        >
+          <RotateCcw className="w-4 h-4 mr-2" />
+          Start New Bill
+        </Button>
+      </div>
     </motion.div>
   );
 }

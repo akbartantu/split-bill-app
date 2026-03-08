@@ -1,8 +1,16 @@
 import { useBillStore } from '@/store/billStore';
 import { motion } from 'framer-motion';
-import { Receipt, ChevronRight, Users, ListPlus, PieChart } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Receipt, ChevronRight, Users, ListPlus, PieChart, TrendingUp, History, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CurrencySelector } from '@/components/settings/CurrencySelector';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const steps = [
   { key: 'participants', label: 'People', icon: Users },
@@ -69,7 +77,7 @@ export function StepIndicator() {
 }
 
 export function Header() {
-  const { currentBill, resetBill } = useBillStore();
+  const { currentBill, resetBill, recentBills, loadBill, cloneBillFromTemplate } = useBillStore();
 
   return (
     <header className="sticky top-0 z-50 glass border-b border-border/50">
@@ -86,6 +94,39 @@ export function Header() {
           </div>
           
           <div className="flex items-center gap-3">
+            {recentBills.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-muted-foreground gap-1">
+                    <History className="w-4 h-4" /> Recent
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {recentBills.slice(0, 5).map((bill) => {
+                    const label = bill.name || bill.eventLabel || 'Untitled';
+                    return (
+                      <div key={bill.id} className="border-b last:border-0">
+                        <DropdownMenuItem onClick={() => loadBill(bill)}>
+                          Open “{label}”
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => cloneBillFromTemplate(bill)}>
+                          <Copy className="w-4 h-4 mr-2" /> Use as template
+                        </DropdownMenuItem>
+                      </div>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            <Link to="/expenses">
+              <motion.button
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <TrendingUp className="w-4 h-4" /> Expenses
+              </motion.button>
+            </Link>
             <CurrencySelector />
             <motion.button
               onClick={resetBill}

@@ -11,6 +11,7 @@ import { logger } from './middleware/logger.js';
 import { analyticsMiddleware } from './middleware/analyticsMiddleware.js';
 import { receiptRoutes } from './routes/receipts.js';
 import { getAdminStats } from './routes/admin.js';
+import { handleTelegramWebhook } from './routes/telegramWebhook.js';
 
 export const app = express();
 
@@ -79,6 +80,9 @@ app.get('/api/health', (req: Request, res: Response) => {
 
 // API routes
 app.use('/api/receipts', receiptRoutes);
+
+// Telegram webhook (optional: set TELEGRAM_BOT_TOKEN and set webhook URL in Telegram)
+app.post('/webhooks/telegram', handleTelegramWebhook);
 
 // Admin (token-protected; not linked from app)
 app.get('/admin', getAdminStats);

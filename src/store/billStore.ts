@@ -152,9 +152,13 @@ interface BillState {
   removePayment: (id: string) => void;
   
   // Save to history
-  saveBillToHistory: () => void;
+  saveBillToHistory: (options?: { asTemplate?: boolean }) => void;
   loadBill: (bill: Bill) => void;
   deleteBillFromHistory: (id: string) => void;
+
+  // Event/template
+  setBillEventLabel: (label: string) => void;
+  cloneBillFromTemplate: (templateBill: Bill) => void;
 }
 
 export const useBillStore = create<BillState>()(
@@ -434,12 +438,12 @@ export const useBillStore = create<BillState>()(
         },
       })),
 
-      saveBillToHistory: () => set(state => {
+      saveBillToHistory: (options) => set(state => {
         const billToSave = {
           ...state.currentBill,
           createdAt: new Date(),
+          isTemplate: options?.asTemplate ?? state.currentBill.isTemplate ?? false,
         };
-        
         return {
           recentBills: [billToSave, ...state.recentBills.slice(0, 9)],
         };
@@ -453,6 +457,42 @@ export const useBillStore = create<BillState>()(
       deleteBillFromHistory: (id) => set(state => ({
         recentBills: state.recentBills.filter(b => b.id !== id),
       })),
+
+      setBillEventLabel: (label) => set(state => ({
+        currentBill: { ...state.currentBill, eventLabel: label || undefined },
+      })),
+
+      cloneBillFromTemplate: (templateBill) => set(state => {
+        const receipts = templateBill.receipts || [];
+        const newReceipts = receipts.map(r => ({ ...r, id: generateId() }));
+        const receiptIdMap = new Map(receipts.map((r, i) => [r.id, newReceipts[i].id]));
+        const newItems = templateBill.items.map(i => ({
+          ...i,
+          id: generateId(),
+          receiptId: receiptIdMap.get(i.receiptId) ?? newReceipts[0]?.id ?? i.receiptId,
+        }));
+        const newPayments = templateBill.payments.map(p => ({
+          ...p,
+          id: generateId(),
+          receiptId: receiptIdMap.get(p.receiptId) ?? newReceipts[0]?.id ?? p.receiptId,
+        }));
+        const newAdjustments = templateBill.adjustments.map(a => ({ ...a, id: generateId() }));
+        const cloned = {
+          ...templateBill,
+          id: generateId(),
+          name: '',
+          createdAt: new Date(),
+          isTemplate: false,
+          receipts: newReceipts,
+          items: newItems,
+          payments: newPayments,
+          adjustments: newAdjustments,
+        };
+        return {
+          currentBill: normalizeBillReceipts(cloned),
+          step: 'items',
+        };
+      }),
 
       addReceipt: (receipt) => {
         const receiptId = generateId();
